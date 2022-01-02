@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Enemy_01
+  - Hit Box
+  - Projectile
+  - BoundsDeath
+  - Ground
+  - Bouncy Walls
+  - Enemy_02
+  - PlayerBounds
+  - PlayerTarget
+  - Enemy Projectile
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - Ground
+  - Player
+  - Enemy
+  - Hit Box
+  - Bounds
+  - DeathBound
+  - Post Processing
+  - BouncyWalls
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: BackGround+
+    uniqueID: 594448783
+    locked: 0
+  - name: BaackGround
+    uniqueID: 3277362419
+    locked: 0
+  - name: ForeGround
+    uniqueID: 1225723569
+    locked: 0
+  - name: ForeGround+
+    uniqueID: 2188472451
+    locked: 0
+  - name: UI
+    uniqueID: 3601423029
+    locked: 0
+  - name: Cursor
+    uniqueID: 3135995435
+    locked: 0
