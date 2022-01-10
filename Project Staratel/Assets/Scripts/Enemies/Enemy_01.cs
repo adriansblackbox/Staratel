@@ -108,6 +108,7 @@ public class Enemy_01 : MonoBehaviour
     //This function is called when the player has the option to "kick" this enemy
     private void InitiateAttack(){
         FindObjectOfType<Audio_Manager>().PlaySound("enemy hit");
+        FindObjectOfType<Audio_Manager>().PlaySound("dash replenish");
         enemySpawner.burstEffect(transform.position, Quaternion.identity, "little burst");
         difference = target - transform.position;
         float distance = difference.magnitude;
@@ -170,6 +171,7 @@ public class Enemy_01 : MonoBehaviour
           if(other.gameObject.CompareTag("Bouncy Walls") && !isGrounded){
             FindObjectOfType<Camera_Shake>().shakeCamera(.095f, .2f);
             enemySpawner.burstEffect(transform.position, Quaternion.identity, "little burst");
+            FindObjectOfType<Audio_Manager>().PlaySound("wall hit");
             timesBounced++;
         }
     }

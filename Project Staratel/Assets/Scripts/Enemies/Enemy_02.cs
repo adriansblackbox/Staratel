@@ -20,6 +20,9 @@ public class Enemy_02 : MonoBehaviour
     private float flyToOffset;
     private float reloadTime;
 
+    public AudioClip shoot, dive, flap, death;
+    public AudioSource audioSource;
+
     private void Awake() {
         flyToOffset = Random.Range(5, 9);
         flyToLocation = new Vector3(transform.position.x, transform.position.y - flyToOffset, transform.position.z);
@@ -48,6 +51,7 @@ public class Enemy_02 : MonoBehaviour
     }
     private void shootAtPlayer(){
         if(reloadTime <= 0){
+            PlaySound("shoot");
             foreach(GameObject point in shootingPoints){
                 Vector3 difference = GameObject.FindWithTag("PlayerTarget").transform.position - point.transform.position;
                 float rotationZ = Mathf.Atan2(difference.y, difference.x) * Mathf.Rad2Deg;
@@ -76,6 +80,13 @@ public class Enemy_02 : MonoBehaviour
         FindObjectOfType<Enemy_Spawner>().flyingSpaces.Remove(flyingSpace);
         FindObjectOfType<Enemy_Spawner>().burstEffect(transform.position, Quaternion.identity, "big burst");
         Destroy(gameObject);
+    }
+    public void PlaySound(string clip){
+        switch(clip){
+            case "shoot":
+                audioSource.PlayOneShot(shoot);
+            break;
+        }
     }
 }
 

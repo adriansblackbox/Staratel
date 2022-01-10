@@ -47,10 +47,12 @@ public class Player_Controller : MonoBehaviour
     }
 
     void Update()
-    {   
-        GroundCheck();
-        VulnerableCheck();
-        Jump();
+    {
+        if(!FindObjectOfType<Game_Manager>().gamePaused){
+            GroundCheck();
+            VulnerableCheck();
+            Jump();
+        }
     }
     private void FixedUpdate() {
         HorizontalMovement();
@@ -68,7 +70,11 @@ public class Player_Controller : MonoBehaviour
     private void VulnerableCheck(){
         if(_timeBeforeVulnerable >= 0 && _isInvincible){ 
             _timeBeforeVulnerable -= Time.deltaTime;
-        }else{_isInvincible = false;}
+            FindObjectOfType<Audio_Manager>().musicSource.volume = 0.1f;
+        }else{
+            _isInvincible = false;
+            FindObjectOfType<Audio_Manager>().musicSource.volume = Mathf.Lerp(FindObjectOfType<Audio_Manager>().musicSource.volume, .1f, Time.deltaTime * 2f);
+        }
     }
     //=======================================================
     private void HorizontalMovement(){
@@ -141,8 +147,9 @@ public class Player_Controller : MonoBehaviour
         }
         // if the player touches the Ground again, the _animator is then adjusted, and the player
         // can jump again
-        if(_isGrounded && _speedBoostTime <= 0){
+        if(_isGrounded && _speedBoostTime <= 0 && _isJumping){
             _isJumping = false;
+            FindObjectOfType<Audio_Manager>().PlaySound("dash replenish");
             _canJump = true;
             _animator.SetBool("isJumping", false);
         }
@@ -193,7 +200,6 @@ public class Player_Controller : MonoBehaviour
          _playerRB.constraints = RigidbodyConstraints2D.None;
          _playerRB.constraints = RigidbodyConstraints2D.FreezeRotation;
         FindObjectOfType<PlanetHealth>().Health -= 25f;
-        _timeBeforeVulnerable = InvincibilityTime;
         if( FindObjectOfType<PlanetHealth>().Health > 0) flashWhite();
         yield return null;
     }

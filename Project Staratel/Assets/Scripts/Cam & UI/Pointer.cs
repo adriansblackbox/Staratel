@@ -16,7 +16,7 @@ public class Pointer : MonoBehaviour
     void Update()
     {
         pointer.transform.position = new Vector3(playerTransform.position.x, playerTransform.position.y, playerTransform.position.z);
-        if(FindObjectOfType<Game_Manager>().gameRunning){
+        if(FindObjectOfType<Game_Manager>().gameRunning && !FindObjectOfType<Game_Manager>().gamePaused){
             Cursor.visible = false;
             targetCursor.SetActive(true);
             target = transform.GetComponent<Camera>().ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0));

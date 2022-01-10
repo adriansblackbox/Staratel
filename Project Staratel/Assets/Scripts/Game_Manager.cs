@@ -14,11 +14,13 @@ public class Game_Manager : MonoBehaviour
     public GameObject mainMenuBotton;
     public GameObject instructionsButton;
     public GameObject planetLife;
+    public GameObject pauseUI;
     public bool gameRunning;
     public bool gameOver;
     public bool restartGame;
     public float playerLives;
     public GameObject player;
+    public bool gamePaused;
 
     private void Start() {
         gameRunning = false;
@@ -26,6 +28,7 @@ public class Game_Manager : MonoBehaviour
         restartGame = false;
         restartButton.SetActive(false);
         planetLife.SetActive(false);
+        pauseUI.SetActive(false);
         // Starts game with full lives
         playerLives = 3;
         player.GetComponent<Player_Controller>().enabled = false;
@@ -47,7 +50,21 @@ public class Game_Manager : MonoBehaviour
         // once player runs out of livesm, game over is initiated
         if(gameRunning){
             if(FindObjectOfType<PlanetHealth>().Health <= 0){
+                FindObjectOfType<Audio_Manager>().PlaySound("player death"); 
                 GameOver();
+            }
+            if(Input.GetKeyDown(KeyCode.Escape)){
+                if(gamePaused){
+                    FindObjectOfType<Audio_Manager>().musicSource.Play();
+                    Time.timeScale = 1f;
+                    gamePaused = false;
+                    restartButton.SetActive(false);
+                }else{
+                    FindObjectOfType<Audio_Manager>().musicSource.Pause();
+                    Time.timeScale = 0f;
+                    gamePaused = true;
+                    restartButton.SetActive(true);
+                }
             }
         }
     }
@@ -55,15 +72,19 @@ public class Game_Manager : MonoBehaviour
     // When the start button is pressed:
     public void StartGame(){
         GetComponent<AudioSource>().Play();
+        FindObjectOfType<Audio_Manager>().musicSource.Play();
         player.GetComponent<Player_Controller>().enabled = true;
         startButton.SetActive(false);
         instructionsButton.SetActive(false);
         planetLife.SetActive(true);
+        pauseUI.SetActive(true);
         gameRunning = true;
     }
 
     // When the player dies:
     public void GameOver(){
+        pauseUI.SetActive(false);
+        FindObjectOfType<Audio_Manager>().musicSource.Stop();
         FindObjectOfType<PlanetHealth>().Health = 0f;
         restartButton.SetActive(true);
         gameOver = true;
@@ -88,7 +109,6 @@ public class Game_Manager : MonoBehaviour
         planetLife.SetActive(false);
         restartGame = true;
         gameOver = false;
-        gameRunning = false;
         restartButton.SetActive(false);
         FindObjectOfType<Score_System>().points = 0;
         FindObjectOfType<Score_System>().pointMultipliyer = 0;
@@ -103,11 +123,18 @@ public class Game_Manager : MonoBehaviour
         foreach(GameObject _enemy02 in _allEnemy02){
             Destroy(_enemy02);
         }
+        if(gamePaused){
+            Time.timeScale = 1f;
+            gamePaused = false;
+            gameRunning = false;
+            FindObjectOfType<Audio_Manager>().musicSource.Stop();
+            player.GetComponent<Player_Controller>().enabled = false;
+        }
     }
 
     // functions for handeling camera movement
     public void moveCameraDown(){
-        mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, gameView.position, 6f * Time.deltaTime);
+        mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, gameView.position, 3f * Time.deltaTime);
     }
      public void moveCameraUp(){
         mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, menuView.position, 6f * Time.deltaTime);
