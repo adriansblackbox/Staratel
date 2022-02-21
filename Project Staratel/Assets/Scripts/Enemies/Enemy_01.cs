@@ -20,6 +20,7 @@ public class Enemy_01 : MonoBehaviour
     public bool _groundMode;
     private bool _projectileMode;
     private bool _targetLocked;
+    private bool _enemyDeath = false;
 
 
     public float projectileSpeed;
@@ -32,6 +33,9 @@ public class Enemy_01 : MonoBehaviour
     public Sprite vulnerableSkin;
     public Sprite fallingSkin;
     public Sprite groundSkin;
+
+    public AudioClip groundImpact, Death;
+    public AudioSource audioSource;
     void Start()
     {
         enemySpawner = FindObjectOfType<Enemy_Spawner>();
@@ -51,15 +55,14 @@ public class Enemy_01 : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        fallingSpeed = enemySpawner.fallingSpeed;
-        if(_fallingMode) fallingMode();
-        else if(!_projectileMode){
-            groundMode();
-        }else
-            transform.up = Vector3.Lerp(transform.up, -1f * GetComponent<Rigidbody2D>().velocity, Time.deltaTime * 5f);
-        // incharge of destroying enemy if bounced more that 2 times
-        if(timesBounced > 1)
-            enemyDeath(true);
+        if(!_enemyDeath){
+            if(_projectileMode)
+                projectileMode();
+            else if(_fallingMode)
+                fallingMode();
+            else
+                groundMode();
+        }
     }
     private void Update() {
         //===================================================================================================
@@ -80,12 +83,26 @@ public class Enemy_01 : MonoBehaviour
             InitiateAttack();
         else if(!isGrounded)
             this.gameObject.GetComponent<SpriteRenderer>().sprite = fallingSkin;
+        if(_enemyDeath)
+            enemyRB.velocity = Vector2.zero;
+    }
+    private void projectileMode(){
+        transform.up = Vector3.Lerp(transform.up, -1f * GetComponent<Rigidbody2D>().velocity, Time.deltaTime * 5f);
+        // incharge of destroying enemy if bounced more that 2 times
+        if(timesBounced > 1)
+            StartCoroutine(enemyDeath(true));
     }
     private void fallingMode(){
         //Constant Falling speed of editors choise
+        fallingSpeed = enemySpawner.fallingSpeed;
         enemyRB.velocity = new Vector2(0, -1*fallingSpeed);
         groundCheck();
-        if(isGrounded) _fallingMode = false;
+        if(isGrounded){
+            audioSource.Play();
+            FindObjectOfType<PlanetHealth>().Health -= 20f;
+            FindObjectOfType<Camera_Shake>().shakeCamera(0.2f, 0.6f);
+            _fallingMode = false;
+        }
     }
     private void groundMode(){
         enemyRB.velocity = Vector2.zero;
@@ -119,7 +136,6 @@ public class Enemy_01 : MonoBehaviour
         //Replenishes player's jump
         if(!player.GetComponent<Player_Controller>()._isGrounded){
             _targetLocked = true;
-            FindObjectOfType<Score_System>().AddMultiplyer();
             player.GetComponent<Player_Controller>()._canJump = true;
             player.GetComponent<Player_Controller>()._resetVelocity = true;
             player.GetComponent<Rigidbody2D>().velocity = new Vector2(
@@ -146,18 +162,19 @@ public class Enemy_01 : MonoBehaviour
             inRangeOfAttack = true;
         if(other.CompareTag("Ground") && !_projectileMode) enemySpawner.targetEnemy.Add(this.gameObject);
         if(!_groundMode){
-            if(other.gameObject.CompareTag("BoundsDeath")) enemyDeath(false);
+            if(other.gameObject.CompareTag("BoundsDeath")) StartCoroutine(enemyDeath(false));
             if(other.gameObject.CompareTag("Ground") && _projectileMode){
+                audioSource.PlayOneShot(groundImpact);
                 FindObjectOfType<Camera_Shake>().shakeCamera(.095f, .2f);
-                enemyDeath(true); 
-                FindObjectOfType<PlanetHealth>().Health += 2f;
+                StartCoroutine(enemyDeath(true)); 
+                FindObjectOfType<PlanetHealth>().Health += 5f;
             }
-            if(other.gameObject.CompareTag("Projectile") && !this.gameObject.CompareTag("Projectile")) enemyDeath(true);
+            if(other.gameObject.CompareTag("Projectile") && !this.gameObject.CompareTag("Projectile"))  StartCoroutine(enemyDeath(true));
         }else{
             if(other.gameObject.CompareTag("Projectile") &&  other.GetComponent<Enemy_01>()._targetLocked){
-                enemyDeath(true);
+                StartCoroutine(enemyDeath(true));
             }else if(other.gameObject.CompareTag("Projectile")){
-                other.gameObject.GetComponent<Enemy_01>().enemyDeath(true);
+                other.gameObject.GetComponent<Enemy_01>().StartCoroutine(enemyDeath(true));
             }
         }
     }
@@ -176,13 +193,25 @@ public class Enemy_01 : MonoBehaviour
         }
     }
 
-    public void enemyDeath(bool Burst){
-        if(this.gameObject.CompareTag("Projectile")){
-            FindObjectOfType<Score_System>().enemyInFlight = false;
+    public IEnumerator enemyDeath(bool Burst){
+        _enemyDeath = true;
+        enemyRB.velocity = Vector2.zero;
+        this.gameObject.layer = this.gameObject.transform.GetChild(0).gameObject.layer = 2;
+        audioSource.Stop();
+        if(timesBounced < 1){
+            this.GetComponent<Parallax>().enabled = true;
+            this.GetComponent<Parallax>().yOrigin = this.transform.position.y;
         }
         if(Burst) enemySpawner.burstEffect(transform.position, Quaternion.identity, "big burst");
-        FindObjectOfType<Score_System>().points += FindObjectOfType<Score_System>().pointMultipliyer;
+        FindObjectOfType<Score_System>().AddPoints(1);
         enemySpawner.targetEnemy.Remove(this.gameObject);
+        audioSource.pitch = Random.Range(1f, 1.25f);
+        audioSource.volume = 0.4f;
+        audioSource.loop = false;
+        //audioSource.pitch = FindObjectOfType<Score_System>().scorePitch;
+        audioSource.PlayOneShot(Death);
+        yield return new WaitForSeconds(0.4f);
         Destroy(this.gameObject);
+        yield return null;
     }
 }

@@ -199,7 +199,7 @@ public class Player_Controller : MonoBehaviour
         yield return new WaitForSeconds(0.4f);
          _playerRB.constraints = RigidbodyConstraints2D.None;
          _playerRB.constraints = RigidbodyConstraints2D.FreezeRotation;
-        FindObjectOfType<PlanetHealth>().Health -= 25f;
+        FindObjectOfType<PlanetHealth>().Health -= 33f;
         if( FindObjectOfType<PlanetHealth>().Health > 0) flashWhite();
         yield return null;
     }
@@ -209,9 +209,9 @@ public class Player_Controller : MonoBehaviour
     // animation keyframe functions
     //=======================================================
         public void loopRun(){
-        _animator.Play("Run", -1,  .5f);
+        _animator.Play("Run", -1, 0.5f);
     }
     public void loopSpin(){
-        _animator.Play("Jump", -1,  (1f/48f)*21f);
+        _animator.Play("Jump", -1, 1/22f * 10f);
     }
 }

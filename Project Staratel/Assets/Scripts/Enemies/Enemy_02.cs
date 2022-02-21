@@ -19,9 +19,10 @@ public class Enemy_02 : MonoBehaviour
     private Vector3 tempPos;
     private float flyToOffset;
     private float reloadTime;
+    private bool died = false;
 
-    public AudioClip shoot, dive, flap, death;
-    public AudioSource audioSource;
+    public AudioClip shoot, death, score;
+    public AudioSource audioSource1, audioSource2;
 
     private void Awake() {
         flyToOffset = Random.Range(5, 9);
@@ -34,11 +35,13 @@ public class Enemy_02 : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(transform.position.y <= flyToLocation.y) needToFlyDown = false;
-        if(needToFlyDown)getIntoPosition();
-        else{
-            bobUpandDown();
-            shootAtPlayer();
+        if(!died){
+            if(transform.position.y <= flyToLocation.y) needToFlyDown = false;
+            if(needToFlyDown)getIntoPosition();
+            else{
+                bobUpandDown();
+                shootAtPlayer();
+            }
         }
     }
 
@@ -51,7 +54,7 @@ public class Enemy_02 : MonoBehaviour
     }
     private void shootAtPlayer(){
         if(reloadTime <= 0){
-            PlaySound("shoot");
+            audioSource1.PlayOneShot(shoot);
             foreach(GameObject point in shootingPoints){
                 Vector3 difference = GameObject.FindWithTag("PlayerTarget").transform.position - point.transform.position;
                 float rotationZ = Mathf.Atan2(difference.y, difference.x) * Mathf.Rad2Deg;
@@ -73,20 +76,22 @@ public class Enemy_02 : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other) {
         //Enemy death by bounds or projectile
         if(other.gameObject.CompareTag("Projectile")){
-            enemyDeath();
+            StartCoroutine(enemyDeath());
         }
     }
-    private void enemyDeath(){
+    public IEnumerator enemyDeath(){
+        died = true;
+        audioSource2.Stop();
+        audioSource2.loop = false;
+        this.gameObject.layer = 2;
         FindObjectOfType<Enemy_Spawner>().flyingSpaces.Remove(flyingSpace);
         FindObjectOfType<Enemy_Spawner>().burstEffect(transform.position, Quaternion.identity, "big burst");
-        Destroy(gameObject);
-    }
-    public void PlaySound(string clip){
-        switch(clip){
-            case "shoot":
-                audioSource.PlayOneShot(shoot);
-            break;
-        }
+        FindObjectOfType<Score_System>().AddPoints(1);
+        audioSource1.pitch = Random.Range(1f, 1.25f);
+        audioSource1.PlayOneShot(death);
+        yield return new WaitForSeconds(0.4f);
+        Destroy(this.gameObject);
+        yield return null;
     }
 }
 

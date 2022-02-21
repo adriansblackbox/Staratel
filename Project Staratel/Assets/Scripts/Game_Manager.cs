@@ -14,13 +14,13 @@ public class Game_Manager : MonoBehaviour
     public GameObject mainMenuBotton;
     public GameObject instructionsButton;
     public GameObject planetLife;
-    public GameObject pauseUI;
     public bool gameRunning;
     public bool gameOver;
     public bool restartGame;
     public float playerLives;
     public GameObject player;
     public bool gamePaused;
+     public AudioClip pause, buttonclick;
 
     private void Start() {
         gameRunning = false;
@@ -28,7 +28,6 @@ public class Game_Manager : MonoBehaviour
         restartGame = false;
         restartButton.SetActive(false);
         planetLife.SetActive(false);
-        pauseUI.SetActive(false);
         // Starts game with full lives
         playerLives = 3;
         player.GetComponent<Player_Controller>().enabled = false;
@@ -54,6 +53,7 @@ public class Game_Manager : MonoBehaviour
                 GameOver();
             }
             if(Input.GetKeyDown(KeyCode.Escape)){
+                GetComponent<AudioSource>().PlayOneShot(pause);
                 if(gamePaused){
                     FindObjectOfType<Audio_Manager>().musicSource.Play();
                     Time.timeScale = 1f;
@@ -67,25 +67,27 @@ public class Game_Manager : MonoBehaviour
                 }
             }
         }
+        //Makes sure that the planet's health displays 0 when game is over
+        if(gameOver){
+            FindObjectOfType<PlanetHealth>().Health = 0f;
+        }
     }
 
     // When the start button is pressed:
     public void StartGame(){
-        GetComponent<AudioSource>().Play();
+        GetComponent<AudioSource>().PlayOneShot(buttonclick);
         FindObjectOfType<Audio_Manager>().musicSource.Play();
         player.GetComponent<Player_Controller>().enabled = true;
         startButton.SetActive(false);
         instructionsButton.SetActive(false);
         planetLife.SetActive(true);
-        pauseUI.SetActive(true);
         gameRunning = true;
     }
 
     // When the player dies:
     public void GameOver(){
-        pauseUI.SetActive(false);
+        FindObjectOfType<Enemy_Spawner>().flyingSpaces.Clear();
         FindObjectOfType<Audio_Manager>().musicSource.Stop();
-        FindObjectOfType<PlanetHealth>().Health = 0f;
         restartButton.SetActive(true);
         gameOver = true;
         gameRunning = false;
@@ -93,18 +95,22 @@ public class Game_Manager : MonoBehaviour
         player.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
         GameObject[] _allEnemy01 = GameObject.FindGameObjectsWithTag("Enemy_01");
         foreach(GameObject _enemy01 in _allEnemy01){
+            _enemy01.GetComponent<AudioSource>().Stop();
             _enemy01.GetComponent<Enemy_01>().enabled = false;
             _enemy01.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
         }
         GameObject[] _allEnemy02 = GameObject.FindGameObjectsWithTag("Enemy_02");
         foreach(GameObject _enemy02 in _allEnemy02){
+            _enemy02.GetComponent<Enemy_02>().audioSource1.Stop();
+            _enemy02.GetComponent<Enemy_02>().audioSource2.Stop();
             _enemy02.GetComponent<Enemy_02>().enabled = false;
         }
     }
 
     // When the player clicks restart
     public void RestartGame(){
-        GetComponent<AudioSource>().Play();
+        GetComponent<AudioSource>().PlayOneShot(buttonclick);
+        FindObjectOfType<Audio_Manager>().audioSourceStatic.Stop();
         FindObjectOfType<PlanetHealth>().Health = 100;
         planetLife.SetActive(false);
         restartGame = true;
@@ -140,14 +146,14 @@ public class Game_Manager : MonoBehaviour
         mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, menuView.position, 6f * Time.deltaTime);
     }
     public void moveCameraRight(){
-        GetComponent<AudioSource>().Play();
+        GetComponent<AudioSource>().PlayOneShot(buttonclick);
         mainCamera.transform.position = instructionsView.position;
         instructionsButton.SetActive(false);
         mainMenuBotton.SetActive(true);
         startButton.SetActive(false);
     }
     public void moveCameraRightToLeft(){
-        GetComponent<AudioSource>().Play();
+        GetComponent<AudioSource>().PlayOneShot(buttonclick);
         mainCamera.transform.position = menuView.position;
         instructionsButton.SetActive(true);
         mainMenuBotton.SetActive(false);
