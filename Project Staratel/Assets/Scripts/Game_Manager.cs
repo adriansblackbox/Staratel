@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Game_Manager : MonoBehaviour
 {
@@ -20,7 +21,10 @@ public class Game_Manager : MonoBehaviour
     public float playerLives;
     public GameObject player;
     public bool gamePaused;
-     public AudioClip pause, buttonclick;
+    public AudioClip pause, buttonclick;
+    public GameObject HighScoreObject, ScoreObject, NewBestObject;
+    public Text HighScoreText, ScoreText;
+    private float HighScore;
 
     private void Start() {
         gameRunning = false;
@@ -31,6 +35,11 @@ public class Game_Manager : MonoBehaviour
         // Starts game with full lives
         playerLives = 3;
         player.GetComponent<Player_Controller>().enabled = false;
+        HighScore = PlayerPrefs.GetFloat("HighScore");
+        HighScoreText.text = HighScore.ToString();
+        NewBestObject.SetActive(false);
+        ScoreObject.SetActive(false);
+        ScoreText.enabled = false;
     }
     private void Update() {
 
@@ -75,6 +84,7 @@ public class Game_Manager : MonoBehaviour
 
     // When the start button is pressed:
     public void StartGame(){
+        HighScoreObject.SetActive(false);
         GetComponent<AudioSource>().PlayOneShot(buttonclick);
         FindObjectOfType<Audio_Manager>().musicSource.Play();
         player.GetComponent<Player_Controller>().enabled = true;
@@ -88,6 +98,18 @@ public class Game_Manager : MonoBehaviour
     public void GameOver(){
         FindObjectOfType<Enemy_Spawner>().flyingSpaces.Clear();
         FindObjectOfType<Audio_Manager>().musicSource.Stop();
+        HighScore = FindObjectOfType<Score_System>().points;
+        // adjust score, and activate either new best or default text
+        if(HighScore >= PlayerPrefs.GetFloat("HighScore")){
+            PlayerPrefs.SetFloat("HighScore", FindObjectOfType<Score_System>().points);
+            HighScoreText.text = PlayerPrefs.GetFloat("HighScore").ToString();
+            PlayerPrefs.Save();
+            NewBestObject.SetActive(true);
+        }else{
+            ScoreObject.SetActive(true);
+        }
+        ScoreText.text = FindObjectOfType<Score_System>().points.ToString();
+        ScoreText.enabled = true;
         restartButton.SetActive(true);
         gameOver = true;
         gameRunning = false;
@@ -118,6 +140,10 @@ public class Game_Manager : MonoBehaviour
         restartButton.SetActive(false);
         FindObjectOfType<Score_System>().points = 0;
         FindObjectOfType<Score_System>().pointMultipliyer = 0;
+        HighScoreObject.SetActive(true);
+        NewBestObject.SetActive(false);
+        ScoreObject.SetActive(false);
+        ScoreText.enabled = false;
         // resets player's lives
         playerLives = 3;
         player.transform.position = new Vector2(0.0f, -4.5f);
@@ -146,6 +172,7 @@ public class Game_Manager : MonoBehaviour
         mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, menuView.position, 6f * Time.deltaTime);
     }
     public void moveCameraRight(){
+        HighScoreObject.SetActive(false);
         GetComponent<AudioSource>().PlayOneShot(buttonclick);
         mainCamera.transform.position = instructionsView.position;
         instructionsButton.SetActive(false);
@@ -153,6 +180,7 @@ public class Game_Manager : MonoBehaviour
         startButton.SetActive(false);
     }
     public void moveCameraRightToLeft(){
+        HighScoreObject.SetActive(true);
         GetComponent<AudioSource>().PlayOneShot(buttonclick);
         mainCamera.transform.position = menuView.position;
         instructionsButton.SetActive(true);
